@@ -1,444 +1,345 @@
-var doc = require('global/document')
-var win = require('global/window')
-var createElement = require('virtual-dom/create-element')
-var diff = require('virtual-dom/diff')
-var patch = require('virtual-dom/patch')
-var h = require('virtual-dom/h')
-var debounce = require('debounce')
-var xtend = require('xtend')
-var mean = require('compute-mean')
-var median = require('compute-median')
-var mode = require('compute-mode')
-var unlerp = require('unlerp')
-var lerp = require('lerp')
-var unified = require('unified')
-var english = require('retext-english')
-var visit = require('unist-util-visit')
-var toString = require('nlcst-to-string')
-var normalize = require('nlcst-normalize')
-var syllable = require('syllable')
-var spache = require('spache')
-var daleChall = require('dale-chall')
-var daleChallFormula = require('dale-chall-formula')
-var ari = require('automated-readability')
-var colemanLiau = require('coleman-liau')
-var flesch = require('flesch')
-var smog = require('smog-formula')
-var gunningFog = require('gunning-fog')
-var spacheFormula = require('spache-formula')
+const doc = require('global/document')
+const win = require('global/window')
+const createElement = require('virtual-dom/create-element')
+const diff = require('virtual-dom/diff')
+const patch = require('virtual-dom/patch')
+const h = require('virtual-dom/h')
+const debounce = require('debounce')
+const xtend = require('xtend')
+const mean = require('compute-mean')
+const unlerp = require('unlerp')
+const lerp = require('lerp')
+const unified = require('unified')
+const english = require('retext-english')
+const stringify = require('retext-stringify')
+const readabilityScores = require('readability-scores')
 
-//TODO - split repo into 2 parts
+const max = Math.max
+const min = Math.min
+const round = Math.round
+const ceil = Math.ceil
 
-var averages = {
-  mean: mean,
-  median: median,
-  mode: modeMean
+const styleContent = `
+[data-readability] .highlight {
+	background-color: hsl(0, 0%, 100%);
 }
 
-var types = {
-  sentence: 'SentenceNode',
-  paragraph: 'ParagraphNode'
+[data-readability] .editor {
+	position: relative;
+	max-width: 100%;
+	overflow: hidden;
+}
+[data-readability] textarea,
+[data-readability] .draw * {
+	/* Can’t use a nice font: kerning renders differently in textareas. */
+	font-family: monospace;
+	font-size: 16px;
+	letter-spacing: normal;
+	line-height: calc(1em + 1ex);
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	background: transparent;
+	box-sizing: border-box;
+	border: none;
+	outline: none;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	resize: none;
 }
 
-var minAge = 5
-var maxAge = 22
-var defaultAge = 12
-var scale = 6
-
-var max = Math.max
-var min = Math.min
-var floor = Math.floor
-var round = Math.round
-var ceil = Math.ceil
-var sqrt = Math.sqrt
-
-var processor = unified().use(english)
-var main = doc.querySelectorAll('main')[0]
-var templates = [].slice.call(doc.querySelectorAll('template'))
-
-var state = {
-  type: 'SentenceNode',
-  average: 'median',
-  template: optionForTemplate(templates[0]),
-  value: valueForTemplate(templates[0]),
-  age: defaultAge
+[data-readability] textarea,
+[data-readability] .draw {
+	padding: 6px 12px;
 }
 
-var tree = render(state)
-var dom = main.appendChild(createElement(tree))
-
-function onchangevalue(ev) {
-  var prev = state.value
-  var next = ev.target.value
-
-  if (prev !== next) {
-    state.value = next
-    state.template = null
-    onchange()
-  }
+[data-readability] .draw {
+	-webkit-print-color-adjust: exact;
+	color: transparent;
+	min-height: 212px;
 }
 
-function onchangeaverage(ev) {
-  state.average = ev.target.value.toLowerCase()
-  onchange()
+[data-readability] textarea {
+	position: absolute;
+	top: 0;
+	color: inherit;
 }
 
-function onchangetype(ev) {
-  state.type = types[ev.target.value.toLowerCase()]
-  onchange()
+[data-readability] .footer {
+	margin-bottom: 1em;
+}
+[data-readability] .footer .ml {
+	margin-left: 1em;
+}
+`
+
+function roundTo2Decimals(n) {
+	return round((n + Number.EPSILON) * 100) / 100
 }
 
-function onchangetemplate(ev) {
-  var target = ev.target.selectedOptions[0]
-  var node = doc.querySelector('[data-label="' + target.textContent + '"]')
-  state.template = optionForTemplate(node)
-  state.value = valueForTemplate(node)
-  onchange()
+function highlight(hue) {
+	return {
+		style: {
+			backgroundColor: 'hsla(' + [hue, '93%', '70%', 0.5].join(', ') + ')'
+		}
+	}
 }
 
-function onchangeage(ev) {
-  state.age = Number(ev.target.value)
-  onchange()
+const processor = unified()
+	.use(english)
+	.use(stringify)
+
+const aReadability = doc.querySelectorAll('[data-readability]')
+
+if (aReadability.length > 0) {
+	const style = doc.createElement('style')
+	style.textContent = styleContent
+	doc.head.append(style)
+	for (const [i, element] of aReadability.entries()) {
+		plugReadability(element, i)
+	}
 }
 
-function onchange() {
-  var next = render(state)
-  dom = patch(dom, diff(tree, next))
-  tree = next
-}
+function plugReadability(element, i) {
+	const idAndName = element.hasAttribute('data-id-and-name')
+		? element.getAttribute('data-id-and-name')
+		: 'readability' + (i + 1)
+	const maxGrade = element.hasAttribute('data-max-grade') ? Number(element.getAttribute('data-max-grade')) : undefined
+	const requestedTargetGrade = element.hasAttribute('data-target-grade')
+		? Number(element.getAttribute('data-target-grade'))
+		: undefined
+	/*
+"[NIH] recommend a readability grade level of less than 7th grade for patient directed information."
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
+*/
+	const defaultTargetGrade = 7
+	const targetGrade = requestedTargetGrade || min(defaultTargetGrade, maxGrade || defaultTargetGrade)
+	const highlightNodeType = element.hasAttribute('data-highlight-by-paragraph') ? 'ParagraphNode' : 'SentenceNode'
+	const hueGreen = 120
+	const hueRed = 0
 
-function render(state) {
-  var tree = processor.runSync(processor.parse(state.value))
-  var change = debounce(onchangevalue, 4)
-  var changeage = debounce(onchangeage, 4)
-  var key = 0
-  var unselected = true
-  var options = templates.map(function(template, index) {
-    var selected = optionForTemplate(template) === state.template
+	let text
 
-    if (selected) {
-      unselected = false
-    }
+	let eleReadability // Parent
+	let eleDraw
+	let eleTextArea
+	let eleFooter
+	if (element.tagName === 'TEXTAREA') {
+		eleReadability = doc.createElement('div')
+		element.insertAdjacentElement('beforebegin', eleReadability)
+		eleTextArea = element
+		eleReadability.dataset.readability = true
+		text = eleTextArea.textContent
+		if (!text) {
+			text = element.getAttribute('data-readability')
+		}
 
-    return h(
-      'option',
-      {key: index, selected: selected},
-      optionForTemplate(template)
-    )
-  })
+		eleTextArea.removeAttribute('data-readability')
 
-  setTimeout(resize, 4)
+		if (!eleTextArea.id && !eleTextArea.name) {
+			eleTextArea.id = idAndName
+			eleTextArea.name = idAndName
+		}
+	} else {
+		text = element.getAttribute('data-readability')
+		eleReadability = element
+		eleTextArea = doc.createElement('textarea')
+		eleTextArea.id = idAndName
+		eleTextArea.name = idAndName
+	}
 
-  return h('div', [
-    h('section.highlight', [h('h1', {key: 'title'}, 'Readability')]),
-    h('div', {key: 'editor', className: 'editor'}, [
-      h('div', {key: 'draw', className: 'draw'}, pad(all(tree, []))),
-      h('textarea', {
-        key: 'area',
-        value: state.value,
-        oninput: change,
-        onpaste: change,
-        onkeyup: change,
-        onmouseup: change
-      })
-    ]),
-    h('section.highlight', [
-      h('p', {key: 'byline'}, [
-        'This project measures readability in text with several formulas: ',
-        h(
-          'a',
-          {
-            href: 'https://en.wikipedia.org/wiki/Dale–Chall_readability_formula'
-          },
-          'Dale–Chall'
-        ),
-        ', ',
-        h(
-          'a',
-          {href: 'https://en.wikipedia.org/wiki/Automated_readability_index'},
-          'Automated Readability'
-        ),
-        ', ',
-        h(
-          'a',
-          {href: 'https://en.wikipedia.org/wiki/Coleman–Liau_index'},
-          'Coleman–Liau'
-        ),
-        ', ',
-        h(
-          'a',
-          {
-            href:
-              'https://en.wikipedia.org/wiki/Flesch–Kincaid_readability_tests#Flesch_reading_ease'
-          },
-          'Flesch'
-        ),
-        ', ',
-        h(
-          'a',
-          {href: 'https://en.wikipedia.org/wiki/Gunning_fog_index'},
-          'Gunning fog'
-        ),
-        ', ',
-        h('a', {href: 'https://en.wikipedia.org/wiki/SMOG'}, 'SMOG'),
-        ', and ',
-        h(
-          'a',
-          {href: 'https://en.wikipedia.org/wiki/Spache_readability_formula'},
-          'Spache'
-        ),
-        '.'
-      ]),
-      h('p', {key: 'ps'}, [
-        'You can edit the text above, or pick a template: ',
-        h(
-          'select',
-          {key: 'template', onchange: onchangetemplate},
-          [
-            unselected
-              ? h('option', {key: '-1', selected: unselected}, '--')
-              : null
-          ].concat(options)
-        ),
-        '.'
-      ]),
-      h('p', {key: 2}, [
-        'You can choose which target age you want to reach (now at ',
-        h('input', {
-          type: 'number',
-          min: minAge,
-          max: maxAge,
-          oninput: changeage,
-          onpaste: changeage,
-          onkeyup: changeage,
-          onmouseup: changeage,
-          attributes: {
-            value: defaultAge
-          }
-        }),
-        '), and text will be highlighted in green if the text matches that (albeit if ',
-        'they’re still in school). Red means it would take 6 years longer in school ',
-        '(so an age of ',
-        h(
-          'span',
-          {
-            title: 'Using the previous input updates the value reflected here'
-          },
-          String(state.age + 6)
-        ),
-        '), and the years between them mix gradually between green and red.'
-      ]),
-      h('p', {key: 3}, [
-        'You can pick which average to use (currently ',
-        h('select', {key: 'average', onchange: onchangeaverage}, [
-          h('option', {key: 0}, 'mean'),
-          h('option', {key: 1, selected: true}, 'median'),
-          h('option', {key: 2}, 'mode')
-        ]),
-        ').'
-      ]),
-      h('p', {key: 4}, [
-        'It’s now highlighting per ',
-        h('select', {key: 'type', onchange: onchangetype}, [
-          h('option', {key: 0}, 'paragraph'),
-          h('option', {key: 1, selected: true}, 'sentence')
-        ]),
-        ', but you can change that.'
-      ])
-    ]),
-    h('section.credits', {key: 'credits'}, [
-      h('p', [
-        h(
-          'a',
-          {href: 'https://github.com/wooorm/readability'},
-          'Fork this website'
-        ),
-        ' • ',
-        h(
-          'a',
-          {href: 'https://github.com/wooorm/readability/blob/src/license'},
-          'MIT'
-        ),
-        ' • ',
-        h('a', {href: 'https://wooorm.com'}, '@wooorm')
-      ])
-    ])
-  ])
+	eleReadability.innerHTML = '<div class="editor"><div class="draw"></div></div><div class="footer"></div>'
+	eleDraw = eleReadability.querySelector('.draw')
+	eleDraw.insertAdjacentElement('afterend', eleTextArea)
+	eleFooter = eleReadability.querySelector('.footer')
 
-  function all(node, parentIds) {
-    var children = node.children
-    var length = children.length
-    var index = -1
-    var results = []
+	eleTextArea.value = text
 
-    while (++index < length) {
-      results = results.concat(one(children[index], parentIds.concat(index)))
-    }
+	const change = debounce(onChangeValue, 200)
+	eleTextArea.addEventListener('input', change)
+	eleTextArea.addEventListener('paste', change)
+	eleTextArea.addEventListener('keyup', change)
+	eleTextArea.addEventListener('mouseup', change)
 
-    return results
-  }
+	let bHighlightLinesUserPreference
+	let grade
+	let hTrees = render(text)
+	/* eslint-disable unicorn/prefer-node-append */
+	let domCreated = {
+		draw: eleDraw.appendChild(createElement(hTrees.draw)),
+		footer: eleFooter.appendChild(createElement(hTrees.footer))
+	}
+	/* eslint-enable unicorn/prefer-node-append */
+	updateTextareaValidity()
 
-  function one(node, parentIds) {
-    var result = 'value' in node ? node.value : all(node, parentIds)
-    var id = parentIds.join('-') + '-' + key
-    var attrs = node.type === state.type ? highlight(node) : null
+	function score(text) {
+		if (text) {
+			const scores = readabilityScores(text)
+			if (scores.letterCount) {
+				const results = {
+					grade: roundTo2Decimals(
+						mean([
+							/*
+							Per Wikipedia: A 2010 study published in the Journal of the Royal College of Physicians of Edinburgh stated that
+								“SMOG should be the preferred measure of readability when evaluating consumer-oriented healthcare material.”
+									https://pubmed.ncbi.nlm.nih.gov/21132132/
+							As this repo's original purpose was targeting public healthcare information, the SMOG score is half the weight.
+							*/
+							scores.smog,
+							mean([
+								scores.daleChall,
+								scores.ari,
+								scores.colemanLiau,
+								scores.fleschKincaid,
+								scores.gunningFog
+							])
+						])
+					)
+				}
+				const weight = unlerp(targetGrade - 2, targetGrade + 4, results.grade) // If targetGrade=7, hue is Green for grade level <= 5 and Red for grade level >= 11
+				results.hue = lerp(hueGreen, hueRed, min(1, max(0, weight)))
 
-    if (attrs) {
-      result = h('span', xtend({key: id, id: id}, attrs), result)
-      key++
-    }
+				return results
+			}
+		}
 
-    return result
-  }
+		return {
+			grade: 0,
+			hue: hueGreen
+		}
+	}
 
-  // Trailing white-space in a `textarea` is shown, but not in a `div` with
-  // `white-space: pre-wrap`.
-  // Add a `br` to make the last newline explicit.
-  function pad(nodes) {
-    var tail = nodes[nodes.length - 1]
+	function onChangeValue(/* ev */) {
+		const prev = text
+		const next = eleTextArea.value
 
-    if (typeof tail === 'string' && tail.charAt(tail.length - 1) === '\n') {
-      nodes.push(h('br', {key: 'break'}))
-    }
+		if (prev !== next) {
+			text = next
+			onChange()
+		}
+	}
 
-    return nodes
-  }
-}
+	function onChangeCheckbox(ev) {
+		bHighlightLinesUserPreference = ev.target.checked
+		onChange()
+	}
 
-// Highlight a section.
-function highlight(node) {
-  var familiarWords = {}
-  var easyWord = {}
-  var complexPolysillabicWord = 0
-  var familiarWordCount = 0
-  var polysillabicWord = 0
-  var syllableCount = 0
-  var easyWordCount = 0
-  var wordCount = 0
-  var letters = 0
-  var sentenceCount = 0
-  var counts
-  var average
-  var weight
-  var hue
+	function onChange() {
+		const hTreesNext = render(text)
+		domCreated.draw = patch(domCreated.draw, diff(hTrees.draw, hTreesNext.draw))
+		domCreated.footer = patch(domCreated.footer, diff(hTrees.footer, hTreesNext.footer))
+		updateTextareaValidity()
+		hTrees = hTreesNext
+	}
 
-  visit(node, 'SentenceNode', sentence)
-  visit(node, 'WordNode', word)
+	function updateTextareaValidity() {
+		eleTextArea.setCustomValidity(
+			grade > maxGrade ? 'Readability grade must be less than or equal to ' + maxGrade + '.' : ''
+		)
+	}
 
-  counts = {
-    complexPolysillabicWord: complexPolysillabicWord,
-    polysillabicWord: polysillabicWord,
-    unfamiliarWord: wordCount - familiarWordCount,
-    difficultWord: wordCount - easyWordCount,
-    syllable: syllableCount,
-    sentence: sentenceCount,
-    word: wordCount,
-    character: letters,
-    letter: letters
-  }
+	function render(text) {
+		const nodeTree = processor.runSync(processor.parse(text))
+		let key = 0
 
-  average = averages[state.average]([
-    gradeToAge(daleChallFormula.gradeLevel(daleChallFormula(counts))[1]),
-    gradeToAge(ari(counts)),
-    gradeToAge(colemanLiau(counts)),
-    fleschToAge(flesch(counts)),
-    smogToAge(smog(counts)),
-    gradeToAge(gunningFog(counts)),
-    gradeToAge(spacheFormula(counts))
-  ])
+		setTimeout(resize, 4)
 
-  weight = unlerp(state.age, state.age + scale, average)
-  hue = lerp(120, 0, min(1, max(0, weight)))
+		const textResults = score(text)
+		grade = textResults.grade
+		const highlightHue = highlight(textResults.hue)
 
-  return {
-    style: {
-      backgroundColor: 'hsla(' + [hue, '93%', '70%', 0.5].join(', ') + ')'
-    }
-  }
+		// Set bHighlightLines before calling all(nodeTree)
+		const bHighlightLines =
+			bHighlightLinesUserPreference === undefined ? grade > targetGrade : bHighlightLinesUserPreference
 
-  function sentence() {
-    sentenceCount++
-  }
+		return {
+			draw: h('div', pad(all(nodeTree))),
+			footer: h('div', [
+				'Grade Level = ',
+				h('span', xtend({ key: 'grade' }, highlightHue), grade),
+				requestedTargetGrade
+					? [
+							';',
+							h(
+								'span',
+								xtend({ key: 'target', className: 'ml' }, grade > targetGrade ? highlightHue : {}),
+								'Target = ' + targetGrade
+							)
+					  ]
+					: '',
+				maxGrade
+					? [
+							';',
+							h(
+								'span',
+								xtend({ key: 'max', className: 'ml' }, grade > maxGrade ? highlightHue : {}),
+								'Max = ' + maxGrade
+							)
+					  ]
+					: '',
+				h('label', { key: 'label', className: 'ml' }, [
+					h('input', {
+						key: 'check',
+						type: 'checkbox',
+						onchange: onChangeCheckbox,
+						checked: bHighlightLines
+					}),
+					'Highlight lines'
+				])
+			])
+		}
 
-  function word(node) {
-    var value = toString(node)
-    var syllables = syllable(value)
-    var normalized = normalize(node, {allowApostrophes: true})
-    var head
+		function all(node) {
+			const children = node.children
+			const length = children.length
+			let index = -1
+			let results = []
 
-    wordCount++
-    syllableCount += syllables
-    letters += value.length
+			while (++index < length) {
+				results = results.concat(one(children[index]))
+			}
 
-    // Count complex words for gunning-fog based on whether they have three or
-    // more syllables and whether they aren’t proper nouns.
-    // The last is checked a little simple, so this index might be over-eager.
-    if (syllables >= 3) {
-      polysillabicWord++
-      head = value.charAt(0)
+			return results
+		}
 
-      if (head === head.toLowerCase()) {
-        complexPolysillabicWord++
-      }
-    }
+		function one(node) {
+			let result = 'value' in node ? node.value : all(node)
+			if (node.type === highlightNodeType) {
+				const id = idAndName + '-' + ++key // ID will be unique for the page, so could also be added as the element's id
+				if (bHighlightLines) {
+					const attrs = highlight(score(processor.stringify(node)).hue)
+					result = h('span', xtend({ key: id }, attrs), result)
+				}
+			}
 
-    // Find unique unfamiliar words for spache.
-    if (spache.includes(normalized) && familiarWords[normalized] !== true) {
-      familiarWords[normalized] = true
-      familiarWordCount++
-    }
+			return result
+		}
 
-    // Find unique difficult words for dale-chall.
-    if (daleChall.includes(normalized) && easyWord[normalized] !== true) {
-      easyWord[normalized] = true
-      easyWordCount++
-    }
-  }
-}
+		// Trailing white-space in a `textarea` is shown, but not in a `div` with
+		// `white-space: pre-wrap`.
+		// Add a `br` to make the last newline explicit.
+		function pad(nodes) {
+			var tail = nodes[nodes.length - 1]
 
-// Calculate the typical starting age (on the higher-end) when someone joins
-// `grade` grade, in the US.
-// See <https://en.wikipedia.org/wiki/Educational_stage#United_States>.
-function gradeToAge(grade) {
-  return round(grade + 5)
-}
+			if (typeof tail === 'string' && tail.charAt(tail.length - 1) === '\n') {
+				nodes.push(h('br', { key: 'break' }))
+			}
 
-// Calculate the age relating to a Flesch result.
-function fleschToAge(value) {
-  return 20 - floor(value / 10)
-}
+			return nodes
+		}
+	}
 
-// Calculate the age relating to a SMOG result.
-// See <http://www.readabilityformulas.com/smog-readability-formula.php>.
-function smogToAge(value) {
-  return ceil(sqrt(value) + 2.5)
-}
+	function rows(node) {
+		if (!node) {
+			return
+		}
 
-function rows(node) {
-  if (!node) {
-    return
-  }
+		return ceil(node.getBoundingClientRect().height / parseInt(win.getComputedStyle(node).lineHeight, 10)) + 1
+	}
 
-  return (
-    ceil(
-      node.getBoundingClientRect().height /
-        parseInt(win.getComputedStyle(node).lineHeight, 10)
-    ) + 1
-  )
-}
-
-function optionForTemplate(template) {
-  return template.dataset.label
-}
-
-function valueForTemplate(template) {
-  return template.innerHTML + '\n\n— ' + optionForTemplate(template)
-}
-
-function resize() {
-  dom.querySelector('textarea').rows = rows(dom.querySelector('.draw'))
-}
-
-function modeMean(value) {
-  return mean(mode(value))
+	function resize() {
+		eleTextArea.rows = rows(eleDraw)
+	}
 }
