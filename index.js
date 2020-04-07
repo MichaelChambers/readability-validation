@@ -21,13 +21,14 @@ const ceil = Math.ceil
 
 const styleContent = `
 [data-readability] .highlight {
-	background-color: hsl(0, 0%, 100%);
+	background-color: #fff;
 }
 
 [data-readability] .editor {
 	position: relative;
 	max-width: 100%;
 	overflow: hidden;
+	background-color: #fff;
 }
 [data-readability] textarea,
 [data-readability] .draw * {
@@ -82,7 +83,7 @@ function roundTo2Decimals(n) {
 function highlight(hue) {
 	return {
 		style: {
-			backgroundColor: 'hsla(' + [hue, '93%', '85%', 1].join(', ') + ')'
+			backgroundColor: 'hsl(' + [hue, '93%', '85%'].join(', ') + ')'
 		}
 	}
 }
