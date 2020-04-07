@@ -82,7 +82,7 @@ function roundTo2Decimals(n) {
 function highlight(hue) {
 	return {
 		style: {
-			backgroundColor: 'hsla(' + [hue, '93%', '70%', 0.5].join(', ') + ')'
+			backgroundColor: 'hsla(' + [hue, '93%', '85%', 1].join(', ') + ')'
 		}
 	}
 }
