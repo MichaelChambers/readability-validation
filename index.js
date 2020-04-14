@@ -127,6 +127,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 	let eleDraw
 	let eleTextArea
 	let eleFooter
+	let eleScreenReaderStatus
 	if (element.tagName === 'TEXTAREA') {
 		eleReadability = doc.createElement('div')
 		element.insertAdjacentElement('beforebegin', eleReadability)
@@ -151,10 +152,12 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 		eleTextArea.name = idAndName
 	}
 
-	eleReadability.innerHTML = '<div class="editor"><div class="draw"></div></div><div class="footer"></div>'
+	eleReadability.innerHTML =
+		'<div class="editor"><div class="draw"></div></div><div class="footer"></div><div role="status" class="sr-only"></div>'
 	eleDraw = eleReadability.querySelector('.draw')
 	eleDraw.insertAdjacentElement('afterend', eleTextArea)
 	eleFooter = eleReadability.querySelector('.footer')
+	eleScreenReaderStatus = eleReadability.querySelector('.sr-only')
 
 	eleTextArea.value = text
 
@@ -239,6 +242,12 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 		eleTextArea.setCustomValidity(
 			grade > maxGrade ? 'Readability grade must be less than or equal to ' + maxGrade + '.' : ''
 		)
+		eleScreenReaderStatus.innerHTML =
+			grade > maxGrade
+				? 'Error: text exceeds maximum readability.'
+				: requestedTargetGrade & (grade > targetGrade)
+				? 'Warning: text exceeds target readability.'
+				: ''
 	}
 
 	function render(text) {
@@ -259,7 +268,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 			draw: h('div', pad(all(nodeTree))),
 			footer: h('div', [
 				'Grade Level = ',
-				h('span', xtend({ key: 'grade' }, highlightHue), grade),
+				h('span', xtend({ key: 'grade', attributes: { role: 'status' } }, highlightHue), grade),
 				requestedTargetGrade
 					? [
 							';',
