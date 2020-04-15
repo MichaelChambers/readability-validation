@@ -43,7 +43,9 @@
     "xtend": "^4.0.0"
   },
   "devDependencies": {
+    "bootstrap": "3.3.2",
     "browserify": "^16.0.0",
+    "http-server": "^0.12.1",
     "nyc": "^15.0.0",
     "prettier": "^1.0.0",
     "remark-cli": "^7.0.0",
@@ -59,7 +61,9 @@
     "build": "npm run build-bundle && npm run build-mangle",
     "test-api": "node test",
     "test-coverage": "nyc --reporter lcov tape test.js",
-    "test": "npm run format && npm run build && npm run test-coverage"
+    "test": "npm run format && npm run build && npm run test-coverage",
+    "copy-to-dest": "xcopy /I /Y src dest && xcopy /Y readability-validation.min.js dest && xcopy /Y node_modules\\bootstrap\\dist\\css\\bootstrap.css dest",
+    "serve": "npm run format && npm run build && npm run copy-to-dest && http-server ./dest"
   },
   "nyc": {
     "check-coverage": true,

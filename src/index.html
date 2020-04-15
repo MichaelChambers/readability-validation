@@ -1,0 +1,101 @@
+<!doctype html>
+<link rel="stylesheet" href="bootstrap.css">
+<style>
+h2{margin: 2em 0 0 0;}
+</style>
+<main>
+<form action="MyPage.asp" method="post" id="MyForm" name="MyForm">
+	<h1>Readability - Validation</h1>
+	<h2>Readability: Definition, Wikipedia</h2><!-- Grade 11.67; highlighted by paragraph. Has WikipediaGrade hidden input with score. Has screen reader text while grade is over max / target. -->
+	<div data-highlight-by-paragraph="true" data-name="Wikipedia" data-target-grade="8" data-max-grade="11" data-readability=
+"	People have defined readability in various ways, e.g., in: The Literacy Dictionary, Jeanne Chall and Edgar Dale, G. Harry McLaughlin, William DuBay.
+	Easy reading helps learning and enjoyment, so what we write should be easy to understand.
+	While many writers and speakers since ancient times have used plain language, the 20th century brought more focus to reading ease. Much research has focused on matching prose to reading skills. This has used many successful formulas: in research, government, teaching, publishing, the military, medicine, and business. Many people in many languages have been helped by this.
+	By the year 2000, there were over 1,000 studies on readability formulas in professional journals about their validity and merit. The study of reading is not just in teaching. Research has shown that much money is wasted by companies in making texts hard for the average reader to read.
+	There are summaries of this research; see the links in this section. Many textbooks on reading include pointers to readability."></div>
+
+	<h2>Ernest Hemingway, The Sun Also Rises</h2><!-- Grade 7.07; using default target (7) so does not display Target=X nor over-the-target screen reader text. -->
+	<div data-name="Hemingway" data-readability="Finally, after a couple more false klaxons, the bus started, and Robert Cohn waved good-by to us, and all the Basques waved good-by to him. As soon as we started out on the road outside of town it was cool. It felt nice riding high up and close under the trees. The bus went quite fast and made a good breeze, and as we went out along the road with the dust powdering the trees and down the hill, we had a fine view, back through the trees, of the town rising up from the bluff above the river. The Basque lying against my knees pointed out the view with the neck of a wine-bottle, and winked at us. He nodded his head."></div>
+
+	<h2>Dr Seuss, The Cat in the Hat</h2><!-- Grade 2.01; no name means no hidden nameGrade hidden input with a score -->
+	<textarea data-target-grade="2" data-readability="true">
+Then our mother came in
+And she said to us two,
+“Did you have any fun?
+Tell me. What did you do?”
+
+And Sally and I did not
+know what to say.
+Should we tell her
+The things that went on
+there that day?
+
+Well… what would YOU do
+If your mother asked you?
+
+The Cat in the Hat
+Look at me!
+Look at me!
+Look at me NOW!
+It is fun to have fun
+But you have
+to know how.</textarea>
+
+
+	<h2>Trump, Presidential Bid announcement</h2><!-- Grade 4.59; while the grade is under the target, line highlights do not automatically display -->
+	<textarea data-name="Trump" data-target-grade="7" data-readability>
+Thank you. It’s true, and these are the best and the finest. When Mexico sends its people, they’re not sending their best. They’re not sending you. They’re not sending you. They’re sending people that have lots of problems, and they’re bringing those problems with us. They’re bringing drugs. They’re bringing crime. They’re rapists. And some, I assume, are good people.
+But I speak to border guards and they tell us what we’re getting. And it only makes common sense. It only makes common sense. They’re sending us not the right people.</textarea>
+
+	<h2>Obama, Farewell Speech</h2><!-- Grade 9.28; native form validation is turned on and blocks submit when grade is over max. -->
+	<textarea name="Obama" data-max-grade="8" data-native-form-validation data-readability=
+"	On Tuesday, January 10, I’ll go home to Chicago to say my grateful farewell to you, even if you can’t be there in person.
+	I’m just beginning to write my remarks. But I’m thinking about them as a chance to say thank you for this amazing journey, to celebrate the ways you’ve changed this country for the better these past eight years, and to offer some thoughts on where we all go from here.
+	Since 2009, we’ve faced our fair share of challenges, and come through them stronger. That’s because we have never let go of a belief that has guided us ever since our founding — our conviction that, together, we can change this country for the better. So I hope you’ll join me one last time."></textarea>
+
+	<h2>Abraham Lincoln, The Gettysburg Address</h2><!-- Grade 11.1; includes screen reader warning when grade is over target. -->
+	<div data-name="Gettysburg" data-target-grade="10" data-readability=
+"	Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.
+	Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure. We are met on a great battle-field of that war. We have come to dedicate a portion of that field, as a final resting place for those who here gave their lives that that nation might live. It is altogether fitting and proper that we should do this.
+	But, in a larger sense, we can not dedicate — we can not consecrate — we can not hallow — this ground. The brave men, living and dead, who struggled here, have consecrated it, far above our poor power to add or detract. The world will little note, nor long remember what we say here, but it can never forget what they did here. It is for us the living, rather, to be dedicated here to the unfinished work which they who fought here have thus far so nobly advanced. It is rather for us to be here dedicated to the great task remaining before us — that from these honored dead we take increased devotion to that cause for which they gave the last full measure of devotion — that we here highly resolve that these dead shall not have died in vain — that this nation, under God, shall have a new birth of freedom — and that government of the people, by the people, for the people, shall not perish from the earth."></div>
+
+	
+	<div class="panel panel-default">
+		<div class="panel-body">
+			<div class="form-horizontal">
+				<div class="form-group">
+					<span title="">
+					<label for="CustomFieldIDAndName" class="col-sm-2 control-label" title="General Audience Summary">
+						General Audience Summary
+					</label>
+					</span>
+					<div class="col-sm-10">
+						<textarea cols="75" rows="10" name="CustomFieldIDAndName" id="CustomFieldIDAndName" title="" aria-label="CustomFieldIDAndName" class="form-control maxLength" maxlength="3000" placeholder="Type up to 3000 characters" >
+	Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.
+	Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure. We are met on a great battle-field of that war. We have come to dedicate a portion of that field, as a final resting place for those who here gave their lives that that nation might live. It is altogether fitting and proper that we should do this.
+	But, in a larger sense, we can not dedicate — we can not consecrate — we can not hallow — this ground. The brave men, living and dead, who struggled here, have consecrated it, far above our poor power to add or detract. The world will little note, nor long remember what we say here, but it can never forget what they did here. It is for us the living, rather, to be dedicated here to the unfinished work which they who fought here have thus far so nobly advanced. It is rather for us to be here dedicated to the great task remaining before us — that from these honored dead we take increased devotion to that cause for which they gave the last full measure of devotion — that we here highly resolve that these dead shall not have died in vain — that this nation, under God, shall have a new birth of freedom — and that government of the people, by the people, for the people, shall not perish from the earth.</textarea>
+						<!-- Adds Readability to existing HTML above. Creates CustomFieldIDAndNameGrade hidden input to submit the score. -->
+						<script>
+							var eleRead = document.getElementById('CustomFieldIDAndName');
+							eleRead.setAttribute('data-readability','');
+							eleRead.setAttribute('data-target-grade','7');
+							eleRead.setAttribute('data-max-grade','9');
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Can test native form validation. -->
+	<input type="submit" value="Submit">
+</form>
+</main>
+<script src="readability-validation.min.js"></script>
+<!-- restore textarea's form-control border -->
+<style>
+[data-readability] .editor {
+	border: 1px solid rgb(204, 204, 204);
+	border-radius: 4px;
+}
+</style>
