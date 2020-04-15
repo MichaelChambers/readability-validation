@@ -59,7 +59,7 @@ const styleContent = `
 [data-readability] .draw {
 	-webkit-print-color-adjust: exact;
 	color: transparent;
-	min-height: 212px;
+	min-height: 62px;
 }
 
 [data-readability] textarea {
@@ -73,6 +73,10 @@ const styleContent = `
 }
 [data-readability] .footer .ml {
 	margin-left: 1em;
+}
+[data-readability] .footer input {
+	margin-right: 0.2em;
+	vertical-align: -1px;
 }
 `
 
@@ -92,24 +96,32 @@ const processor = unified()
 	.use(english)
 	.use(stringify)
 
-const aReadability = doc.querySelectorAll('[data-readability]')
+const dataReadability = 'data-readability' // Value used as initial text unless element is textarea and has textContent
+const dataName = 'data-name' // Value used for textarea name and as base for score input's name, but does not override any existing name
+const dataMaxGrade = 'data-max-grade'
+const dataTargetGrade = 'data-target-grade'
+const dataHighlightByParagraph = 'data-highlight-by-paragraph' // Value ignored, evaluated as true if attribute exists
+const dataNativeFormValidation = 'data-native-form-validation' // Value ignored, evaluated as true if attribute exists
+
+const aReadability = doc.querySelectorAll('[' + dataReadability + ']')
 
 if (aReadability.length > 0) {
 	const style = doc.createElement('style')
 	style.textContent = styleContent
 	doc.head.append(style)
-	for (const [i, element] of aReadability.entries()) {
-		plugReadability(element, i)
+	for (const element of aReadability) {
+		plugReadability(element)
 	}
 }
 
-function plugReadability(element, i) {
-	const idAndName = element.hasAttribute('data-id-and-name')
-		? element.getAttribute('data-id-and-name')
-		: 'readability' + (i + 1)
-	const maxGrade = element.hasAttribute('data-max-grade') ? Number(element.getAttribute('data-max-grade')) : undefined
-	const requestedTargetGrade = element.hasAttribute('data-target-grade')
-		? Number(element.getAttribute('data-target-grade'))
+function plugReadability(element) {
+	const name = element.hasAttribute(dataName)
+		? element.getAttribute(dataName)
+		: (element.tagName === 'TEXTAREA' && element.name) || ''
+	const nameGrade = name && name + 'Grade'
+	const maxGrade = element.hasAttribute(dataMaxGrade) ? Number(element.getAttribute(dataMaxGrade)) : undefined
+	const requestedTargetGrade = element.hasAttribute(dataTargetGrade)
+		? Number(element.getAttribute(dataTargetGrade))
 		: undefined
 	/*
 "[NIH] recommend a readability grade level of less than 7th grade for patient directed information."
@@ -117,7 +129,8 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 */
 	const defaultTargetGrade = 7
 	const targetGrade = requestedTargetGrade || min(defaultTargetGrade, maxGrade || defaultTargetGrade)
-	const highlightNodeType = element.hasAttribute('data-highlight-by-paragraph') ? 'ParagraphNode' : 'SentenceNode'
+	const highlightNodeType = element.hasAttribute(dataHighlightByParagraph) ? 'ParagraphNode' : 'SentenceNode'
+	const bNativeFormValidation = element.hasAttribute(dataNativeFormValidation)
 	const hueGreen = 120
 	const hueRed = 0
 
@@ -127,37 +140,35 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 	let eleDraw
 	let eleTextArea
 	let eleFooter
-	let eleScreenReaderStatus
 	if (element.tagName === 'TEXTAREA') {
 		eleReadability = doc.createElement('div')
 		element.insertAdjacentElement('beforebegin', eleReadability)
 		eleTextArea = element
-		eleReadability.dataset.readability = true
-		text = eleTextArea.textContent
+		text = eleTextArea.value
 		if (!text) {
-			text = element.getAttribute('data-readability')
+			text = eleTextArea.getAttribute(dataReadability)
 		}
 
-		eleTextArea.removeAttribute('data-readability')
+		eleTextArea.removeAttribute(dataReadability)
 
-		if (!eleTextArea.id && !eleTextArea.name) {
-			eleTextArea.id = idAndName
-			eleTextArea.name = idAndName
+		if (name && !eleTextArea.name) {
+			eleTextArea.name = name
 		}
 	} else {
-		text = element.getAttribute('data-readability')
 		eleReadability = element
+		text = eleReadability.getAttribute(dataReadability)
 		eleTextArea = doc.createElement('textarea')
-		eleTextArea.id = idAndName
-		eleTextArea.name = idAndName
+		if (name) {
+			eleTextArea.name = name
+		}
 	}
 
-	eleReadability.innerHTML =
-		'<div class="editor"><div class="draw"></div></div><div class="footer"></div><div role="status" class="sr-only"></div>'
+	eleReadability.setAttribute(dataReadability, '')
+
+	eleReadability.innerHTML = '<div class="editor"><div class="draw"></div></div><div class="footer"></div>'
 	eleDraw = eleReadability.querySelector('.draw')
 	eleDraw.insertAdjacentElement('afterend', eleTextArea)
 	eleFooter = eleReadability.querySelector('.footer')
-	eleScreenReaderStatus = eleReadability.querySelector('.sr-only')
 
 	eleTextArea.value = text
 
@@ -239,15 +250,11 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 	}
 
 	function updateTextareaValidity() {
-		eleTextArea.setCustomValidity(
-			grade > maxGrade ? 'Readability grade must be less than or equal to ' + maxGrade + '.' : ''
-		)
-		eleScreenReaderStatus.innerHTML =
-			grade > maxGrade
-				? 'Error: text exceeds maximum readability.'
-				: requestedTargetGrade & (grade > targetGrade)
-				? 'Warning: text exceeds target readability.'
-				: ''
+		if (bNativeFormValidation) {
+			eleTextArea.setCustomValidity(
+				grade > maxGrade ? 'Readability grade must be less than or equal to ' + maxGrade + '.' : ''
+			)
+		}
 	}
 
 	function render(text) {
@@ -297,7 +304,17 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 						checked: bHighlightLines
 					}),
 					'Highlight lines'
-				])
+				]),
+				h(
+					'div',
+					{ key: 'screenReaderStatus', className: 'sr-only', attributes: { role: 'status' } },
+					grade > maxGrade
+						? 'Error: text exceeds maximum readability.'
+						: requestedTargetGrade && grade > targetGrade
+						? 'Warning: text exceeds target readability.'
+						: ''
+				),
+				nameGrade ? h('input', { key: nameGrade, name: nameGrade, type: 'hidden' }, grade) : ''
 			])
 		}
 
@@ -317,7 +334,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 		function one(node) {
 			let result = 'value' in node ? node.value : all(node)
 			if (node.type === highlightNodeType) {
-				const id = idAndName + '-' + ++key // ID will be unique for the page, so could also be added as the element's id
+				const id = name + '-' + ++key
 				if (bHighlightLines) {
 					const attrs = highlight(score(processor.stringify(node)).hue)
 					result = h('span', xtend({ key: id }, attrs), result)
