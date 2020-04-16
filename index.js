@@ -92,9 +92,7 @@ function highlight(hue) {
 	}
 }
 
-const processor = unified()
-	.use(english)
-	.use(stringify)
+const processor = unified().use(english).use(stringify)
 
 const dataReadability = 'data-readability' // Value used as initial text unless element is textarea and has textContent
 const dataName = 'data-name' // Value used for textarea name and as base for score input's name, but does not override any existing name
@@ -142,7 +140,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 	let eleFooter
 	if (element.tagName === 'TEXTAREA') {
 		eleReadability = doc.createElement('div')
-		element.insertAdjacentElement('beforebegin', eleReadability)
+		element.before(eleReadability)
 		eleTextArea = element
 		text = eleTextArea.value
 		if (!text) {
@@ -167,7 +165,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 
 	eleReadability.innerHTML = '<div class="editor"><div class="draw"></div></div><div class="footer"></div>'
 	eleDraw = eleReadability.querySelector('.draw')
-	eleDraw.insertAdjacentElement('afterend', eleTextArea)
+	eleDraw.after(eleTextArea)
 	eleFooter = eleReadability.querySelector('.footer')
 
 	eleTextArea.value = text
@@ -181,12 +179,10 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 	let bHighlightLinesUserPreference
 	let grade
 	let hTrees = render(text)
-	/* eslint-disable unicorn/prefer-node-append */
 	let domCreated = {
 		draw: eleDraw.appendChild(createElement(hTrees.draw)),
 		footer: eleFooter.appendChild(createElement(hTrees.footer))
 	}
-	/* eslint-enable unicorn/prefer-node-append */
 	updateTextareaValidity()
 
 	function score(text) {
@@ -227,10 +223,10 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 	}
 
 	function onChangeValue(/* ev */) {
-		const prev = text
+		const previous = text
 		const next = eleTextArea.value
 
-		if (prev !== next) {
+		if (previous !== next) {
 			text = next
 			onChange()
 		}

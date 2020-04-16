@@ -37,7 +37,7 @@
     "readability-scores": "^1.0.1",
     "retext-english": "^3.0.0",
     "retext-stringify": "^2.0.4",
-    "unified": "^8.0.0",
+    "unified": "^9.0.0",
     "unlerp": "^1.0.0",
     "virtual-dom": "^2.0.0",
     "xtend": "^4.0.0"
@@ -45,14 +45,13 @@
   "devDependencies": {
     "bootstrap": "3.4.1",
     "browserify": "^16.0.0",
-    "http-server": "^0.12.1",
     "nyc": "^15.0.0",
-    "prettier": "^1.0.0",
-    "remark-cli": "^7.0.0",
-    "remark-preset-wooorm": "^6.0.0",
+    "prettier": "^2.0.0",
+    "remark-cli": "^8.0.0",
+    "remark-preset-wooorm": "^7.0.0",
     "tape": "^4.0.0",
     "tinyify": "^2.0.0",
-    "xo": "^0.25.0"
+    "xo": "^0.28.0"
   },
   "scripts": {
     "format": "remark . -qfo && prettier --write \"**/*.js\" && xo --fix",
@@ -69,7 +68,7 @@
     "check-coverage": true,
     "lines": 100,
     "functions": 100,
-    "branches": 97.9
+    "branches": 100
   },
   "prettier": {
     "arrowParens": "always",
@@ -87,7 +86,10 @@
     "esnext": false,
     "ignores": [
       "readability-validation.js"
-    ]
+    ],
+    "rules": {
+      "unicorn/prefer-node-append": "off"
+    }
   },
   "remarkConfig": {
     "plugins": [
