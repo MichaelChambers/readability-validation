@@ -310,7 +310,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 						? 'Warning: text exceeds target readability.'
 						: ''
 				),
-				nameGrade ? h('input', { key: nameGrade, name: nameGrade, type: 'hidden' }, grade) : ''
+				nameGrade ? h('input', { key: nameGrade, name: nameGrade, type: 'hidden', value: grade }) : ''
 			])
 		}
 
