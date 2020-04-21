@@ -126,7 +126,7 @@ function plugReadability(element) {
 https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 */
 	const defaultTargetGrade = 7
-	const targetGrade = requestedTargetGrade || min(defaultTargetGrade, maxGrade || defaultTargetGrade)
+	const targetGrade = requestedTargetGrade || maxGrade || defaultTargetGrade
 	const highlightNodeType = element.hasAttribute(dataHighlightByParagraph) ? 'ParagraphNode' : 'SentenceNode'
 	const bNativeFormValidation = element.hasAttribute(dataNativeFormValidation)
 	const hueGreen = 120
