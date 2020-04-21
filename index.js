@@ -186,40 +186,36 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 	updateTextareaValidity()
 
 	function score(text) {
-		if (text) {
-			const scores = readabilityScores(text)
-			if (scores.letterCount) {
-				const results = {
-					grade: roundTo2Decimals(
-						mean([
-							/*
-							Per Wikipedia: A 2010 study published in the Journal of the Royal College of Physicians of Edinburgh stated that
-								“SMOG should be the preferred measure of readability when evaluating consumer-oriented healthcare material.”
-									https://pubmed.ncbi.nlm.nih.gov/21132132/
-							As this repo's original purpose was targeting public healthcare information, the SMOG score is half the weight.
-							*/
-							scores.smog,
-							mean([
-								scores.daleChall,
-								scores.ari,
-								scores.colemanLiau,
-								scores.fleschKincaid,
-								scores.gunningFog
-							])
-						])
-					)
-				}
-				const weight = unlerp(targetGrade - 2, targetGrade + 4, results.grade) // If targetGrade=7, hue is Green for grade level <= 5 and Red for grade level >= 11
-				results.hue = lerp(hueGreen, hueRed, min(1, max(0, weight)))
-
-				return results
-			}
-		}
-
-		return {
+		const results = {
+			scores: Boolean(text) && readabilityScores(text),
 			grade: 0,
 			hue: hueGreen
 		}
+		const scores = results.scores
+		if (Boolean(scores) && scores.letterCount) {
+			results.grade = roundTo2Decimals(
+				mean([
+					/*
+					Per Wikipedia: A 2010 study published in the Journal of the Royal College of Physicians of Edinburgh stated that
+						“SMOG should be the preferred measure of readability when evaluating consumer-oriented healthcare material.”
+							https://pubmed.ncbi.nlm.nih.gov/21132132/
+					As this repo's original purpose was targeting public healthcare information, the SMOG score is 3/8 the weight.
+					*/
+					scores.smog,
+					scores.smog,
+					scores.smog,
+					scores.daleChall,
+					scores.ari,
+					scores.colemanLiau,
+					scores.fleschKincaid,
+					scores.gunningFog
+				])
+			)
+			const weight = unlerp(targetGrade - 2, targetGrade + 4, results.grade) // If targetGrade=7, hue is Green for grade level <= 5 and Red for grade level >= 11
+			results.hue = lerp(hueGreen, hueRed, min(1, max(0, weight)))
+		}
+
+		return results
 	}
 
 	function onChangeValue(/* ev */) {
@@ -267,11 +263,55 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 		const bHighlightLines =
 			bHighlightLinesUserPreference === undefined ? grade > targetGrade : bHighlightLinesUserPreference
 
+		const scores = textResults.scores
+		const sResultsHTML =
+			'<dl>' +
+			'<dt>Simple Measure of Gobbledygook</dt><dd>' +
+			scores.smog +
+			'</dd>' +
+			'<dt>Automated Readability</dt><dd>' +
+			scores.ari +
+			'</dd>' +
+			'<dt>Coleman-Liau</dt><dd>' +
+			scores.colemanLiau +
+			'</dd>' +
+			'<dt>Dale-Chall</dt><dd>' +
+			scores.daleChall +
+			'</dd>' +
+			'<dt>Flesch-Kincaid</dt><dd>' +
+			scores.fleschKincaid +
+			'</dd>' +
+			'<dt>Gunning Fog</dt><dd>' +
+			scores.gunningFog +
+			'</dd>' +
+			'</dl>'
+
 		return {
 			draw: h('div', pad(all(nodeTree))),
 			footer: h('div', [
-				'Grade Level = ',
-				h('span', xtend({ key: 'grade', attributes: { role: 'status' } }, highlightHue), grade),
+				h(
+					'a',
+					{
+						key: 'results',
+						dataset: {
+							content: sResultsHTML,
+							html: 'true',
+							toggle: 'popover-app',
+							placement: 'auto'
+						},
+						attributes: {
+							rel: 'popover',
+							role: 'status',
+							'aria-label': 'Detailed Results',
+							title: 'Detailed Results',
+							href: '#'
+						}
+					},
+					[
+						'Grade Level = ',
+						h('span', xtend({ key: 'grade', attributes: { role: 'status' } }, highlightHue), grade),
+					]
+				),
 				requestedTargetGrade
 					? [
 							';',
