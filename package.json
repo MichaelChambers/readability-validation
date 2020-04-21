@@ -34,7 +34,7 @@
     "debounce": "^1.0.0",
     "global": "^4.0.0",
     "lerp": "^1.0.0",
-    "readability-scores": "^1.0.1",
+    "readability-scores": "^1.0.2",
     "retext-english": "^3.0.0",
     "retext-stringify": "^2.0.4",
     "unified": "^9.0.0",
