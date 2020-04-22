@@ -45,7 +45,7 @@
   "devDependencies": {
     "bootstrap": "^3.3.2",
     "browserify": "^16.0.0",
-    "jquery": "^1.11.2",
+    "jquery": "^3.5.0",
     "nyc": "^15.0.0",
     "prettier": "^2.0.5",
     "remark-cli": "^8.0.0",
