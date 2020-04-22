@@ -309,7 +309,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 					},
 					[
 						'Grade Level = ',
-						h('span', xtend({ key: 'grade', attributes: { role: 'status' } }, highlightHue), grade),
+						h('span', xtend({ key: 'grade', attributes: { role: 'status' } }, highlightHue), grade)
 					]
 				),
 				requestedTargetGrade
