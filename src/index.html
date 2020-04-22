@@ -1,5 +1,5 @@
 <!doctype html>
-<link rel="stylesheet" href="bootstrap.css">
+<link rel="stylesheet" href="bootstrap.min.css">
 <style>
 h2{margin: 2em 0 0 0;}
 </style>
@@ -92,6 +92,13 @@ But I speak to border guards and they tell us what we’re getting. And it only 
 </form>
 </main>
 <script src="readability-validation.min.js"></script>
+<script src="jquery.min.js"></script>
+<script src="bootstrap.min.js"></script>
+<script>
+	$(function () {
+		$('[data-toggle="popover-app"]').popover()
+	})
+</script>
 <!-- restore textarea's form-control border -->
 <style>
 [data-readability] .editor {
