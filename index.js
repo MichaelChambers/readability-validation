@@ -115,7 +115,7 @@ if (aReadability.length > 0) {
 function plugReadability(element) {
 	const name = element.hasAttribute(dataName)
 		? element.getAttribute(dataName)
-		: (element.tagName === 'TEXTAREA' && element.name) || ''
+		: (['TEXTAREA', 'INPUT'].includes(element.tagName) && element.name) || ''
 	const nameGrade = name && name + 'Grade'
 	const maxGrade = element.hasAttribute(dataMaxGrade) ? Number(element.getAttribute(dataMaxGrade)) : undefined
 	const requestedTargetGrade = element.hasAttribute(dataTargetGrade)
@@ -139,48 +139,12 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 	const tooHardHue = 0 // Red
 
 	let text
-
-	let eleReadability // Parent
+	let eleReadability
 	let eleDraw
 	let eleTextArea
 	let eleFooter
-	if (element.tagName === 'TEXTAREA') {
-		eleReadability = doc.createElement('div')
-		element.before(eleReadability)
-		eleTextArea = element
-		text = eleTextArea.value
-		if (!text) {
-			text = eleTextArea.getAttribute(dataReadability)
-		}
 
-		eleTextArea.removeAttribute(dataReadability)
-
-		if (name && !eleTextArea.name) {
-			eleTextArea.name = name
-		}
-	} else {
-		eleReadability = element
-		text = eleReadability.getAttribute(dataReadability)
-		eleTextArea = doc.createElement('textarea')
-		if (name) {
-			eleTextArea.name = name
-		}
-	}
-
-	eleReadability.setAttribute(dataReadability, '')
-
-	eleReadability.innerHTML = '<div class="editor"><div class="draw"></div></div><div class="footer"></div>'
-	eleDraw = eleReadability.querySelector('.draw')
-	eleDraw.after(eleTextArea)
-	eleFooter = eleReadability.querySelector('.footer')
-
-	eleTextArea.value = text
-
-	const change = debounce(onChangeValue, 200)
-	eleTextArea.addEventListener('input', change)
-	eleTextArea.addEventListener('paste', change)
-	eleTextArea.addEventListener('keyup', change)
-	eleTextArea.addEventListener('mouseup', change)
+	setElements(element)
 
 	let bHighlightLinesUserPreference
 	let grade
@@ -190,6 +154,65 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 		footer: eleFooter.appendChild(createElement(hTrees.footer))
 	}
 	updateTextareaValidity()
+
+	function setElements(element) {
+		const bIsTextArea = element.tagName === 'TEXTAREA'
+		const bIsInput = element.tagName === 'INPUT'
+
+		// Set the eleReadability [data-readability] root
+		if (bIsTextArea || bIsInput) {
+			eleReadability = doc.createElement('div')
+			element.before(eleReadability)
+			text = element.value
+			if (!text) {
+				text = element.getAttribute(dataReadability)
+			}
+
+			element.removeAttribute(dataReadability)
+		} else {
+			eleReadability = element
+			text = eleReadability.getAttribute(dataReadability)
+		}
+
+		// Set the eleTextArea
+		if (bIsTextArea) {
+			eleTextArea = element
+			if (name && !eleTextArea.name) {
+				eleTextArea.name = name
+			}
+		} else {
+			eleTextArea = doc.createElement('textarea')
+			if (name) {
+				eleTextArea.name = name
+			}
+
+			if (bIsInput) {
+				// Copy class and most attributes from Input to new Textarea, then delete the Input.
+				for (const attName of element.getAttributeNames()) {
+					if (!['name', 'type', 'value', 'size'].includes(attName)) {
+						eleTextArea.setAttribute(attName, element.getAttribute(attName))
+					}
+				}
+
+				element.remove()
+			}
+		}
+
+		eleReadability.setAttribute(dataReadability, '')
+
+		eleReadability.innerHTML = '<div class="editor"><div class="draw"></div></div><div class="footer"></div>'
+		eleDraw = eleReadability.querySelector('.draw')
+		eleDraw.after(eleTextArea)
+		eleFooter = eleReadability.querySelector('.footer')
+
+		eleTextArea.value = text
+
+		const change = debounce(onChangeValue, 200)
+		eleTextArea.addEventListener('input', change)
+		eleTextArea.addEventListener('paste', change)
+		eleTextArea.addEventListener('keyup', change)
+		eleTextArea.addEventListener('mouseup', change)
+	}
 
 	function score(text) {
 		const results = {
