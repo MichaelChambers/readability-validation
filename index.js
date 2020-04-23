@@ -129,8 +129,14 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 	const targetGrade = requestedTargetGrade || maxGrade || defaultTargetGrade
 	const highlightNodeType = element.hasAttribute(dataHighlightByParagraph) ? 'ParagraphNode' : 'SentenceNode'
 	const bNativeFormValidation = element.hasAttribute(dataNativeFormValidation)
-	const hueGreen = 120
-	const hueRed = 0
+
+	// Grade/Hue range: Target is 1/3 from TooEasy to TooHard (in grade level and in hue)
+	const tooHardGrade = max(targetGrade + 4, maxGrade || targetGrade) // Default = 11
+	const tooEasyGrade = targetGrade - (tooHardGrade - targetGrade) / 2 // Default = 5
+	const tooEasyHue = 180 // Teal
+	// Target = 120 = Green
+	// Hard = 60 = Yellow
+	const tooHardHue = 0 // Red
 
 	let text
 
@@ -189,7 +195,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 		const results = {
 			scores: Boolean(text) && readabilityScores(text),
 			grade: 0,
-			hue: hueGreen
+			hue: tooEasyHue
 		}
 		const scores = results.scores
 		if (Boolean(scores) && scores.letterCount) {
@@ -211,8 +217,8 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 					scores.gunningFog
 				])
 			)
-			const weight = unlerp(targetGrade - 2, targetGrade + 4, results.grade) // If targetGrade=7, hue is Green for grade level <= 5 and Red for grade level >= 11
-			results.hue = lerp(hueGreen, hueRed, min(1, max(0, weight)))
+			const weight = unlerp(tooEasyGrade, tooHardGrade, results.grade)
+			results.hue = lerp(tooEasyHue, tooHardHue, min(1, max(0, weight)))
 		}
 
 		return results
@@ -267,22 +273,22 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 		const sResultsHTML =
 			'<dl>' +
 			'<dt>Simple Measure of Gobbledygook</dt><dd>' +
-			scores.smog +
+			(scores.smog || 0) +
 			'</dd>' +
 			'<dt>Automated Readability</dt><dd>' +
-			scores.ari +
+			(scores.ari || 0) +
 			'</dd>' +
 			'<dt>Coleman-Liau</dt><dd>' +
-			scores.colemanLiau +
+			(scores.colemanLiau || 0) +
 			'</dd>' +
 			'<dt>Dale-Chall</dt><dd>' +
-			scores.daleChall +
+			(scores.daleChall || 0) +
 			'</dd>' +
 			'<dt>Flesch-Kincaid</dt><dd>' +
-			scores.fleschKincaid +
+			(scores.fleschKincaid || 0) +
 			'</dd>' +
 			'<dt>Gunning Fog</dt><dd>' +
-			scores.gunningFog +
+			(scores.gunningFog || 0) +
 			'</dd>' +
 			'</dl>'
 
@@ -372,8 +378,12 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 			if (node.type === highlightNodeType) {
 				const id = name + '-' + ++key
 				if (bHighlightLines) {
-					const attrs = highlight(score(processor.stringify(node)).hue)
-					result = h('span', xtend({ key: id }, attrs), result)
+					const scores = score(processor.stringify(node))
+					result = h(
+						'span',
+						xtend({ key: id, attributes: { 'data-grade': scores.grade } }, highlight(scores.hue)),
+						result
+					)
 				}
 			}
 
