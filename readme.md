@@ -1,7 +1,7 @@
 # Readability
 
 *   Add readability-validation.min.js to any web page.
-*   On any existing textareas you want scored and/or validated,
+*   On any existing textareas or inputs you want scored and/or validated,
     add the data-readability attribute.
 *   Or use one or more empty divs and add the data-readability attribute
     and set the attribute’s value to any initial text.
@@ -15,9 +15,12 @@
 ## Optional attributes:
 
 *   data-target-grade: determines the highlighted color feedback.
-    Target-2 = Green, Target+4 = Red.  Default = min(data-max-grade, 7)
+    Target-2 = Teal, Target = Green, Target+4 = Red.
+    Default = data-max-grade || 7
 *   data-max-grade: indicates if the text’s grade is above a
-    maximum allowed score.  Default = none
+    maximum allowed score.  If over Target+4, extends the
+    grade level highlight range in both directions.
+    Default = none
 *   data-native-form-validation: if attribute exists and text’s
     grade is greater than data-max-grade, blocks form submission.
 *   data-highlight-by-paragraph: if attribute exists, highlighted text
