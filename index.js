@@ -134,8 +134,8 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 	const tooHardGrade = max(targetGrade + 4, maxGrade || targetGrade) // Default = 11
 	const tooEasyGrade = targetGrade - (tooHardGrade - targetGrade) / 2 // Default = 5
 	const tooEasyHue = 180 // Teal
-	// Target = 120 = Green
-	// Hard = 60 = Yellow
+	// TargetHue = 120 = Green
+	// HardHue = 60 = Yellow
 	const tooHardHue = 0 // Red
 
 	let text
