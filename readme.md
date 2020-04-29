@@ -29,7 +29,7 @@
     feedback is per paragraph instead of per sentence.
 *   data-popover-toggle: Populates data-toggle value for popovers.
 
-## Global attributes:
+## Optional global readability config:
 
 *   If a globalReadabilityConfig object exists before the readability.min.js
     include, that config object’s values will be used as default options.
