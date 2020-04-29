@@ -347,7 +347,8 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 							content: sResultsHTML,
 							html: 'true',
 							toggle: popover,
-							placement: 'auto'
+							placement: 'auto',
+							trigger: 'click hover focus'
 						},
 						attributes: {
 							rel: 'popover',
