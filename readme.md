@@ -32,7 +32,7 @@
 ## Global attributes:
 
 *   If a globalReadabilityConfig object exists before the readability.min.js
-    include, that config object's values will be used as default options.
+    include, that config object’s values will be used as default options.
     Any attributes on any particular elements will still take precedence.
 *   targetGrade
 *   maxGrade
@@ -40,7 +40,6 @@
 *   nativeFormValidation
 *   highlightByParagraph
 *   popoverToggle
-
 
 ## Related
 
