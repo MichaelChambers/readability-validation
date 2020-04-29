@@ -100,6 +100,17 @@ const dataMaxGrade = 'data-max-grade'
 const dataTargetGrade = 'data-target-grade'
 const dataHighlightByParagraph = 'data-highlight-by-paragraph' // Value ignored, evaluated as true if attribute exists
 const dataNativeFormValidation = 'data-native-form-validation' // Value ignored, evaluated as true if attribute exists
+const dataPopoverToggle = 'data-popover-toggle' // Populates data-toggle value for popovers
+
+// Any attributes on the data-readability elements are preferred over values from the optional global config, below.
+const config = win.globalReadabilityConfig || {
+	name: undefined,
+	maxGrade: undefined,
+	targetGrade: undefined,
+	highlightByParagraph: undefined,
+	nativeFormValidation: undefined,
+	popoverToggle: undefined
+}
 
 const aReadability = doc.querySelectorAll('[' + dataReadability + ']')
 
@@ -115,11 +126,17 @@ if (aReadability.length > 0) {
 function plugReadability(element) {
 	const name = element.hasAttribute(dataName)
 		? element.getAttribute(dataName)
-		: (['TEXTAREA', 'INPUT'].includes(element.tagName) && element.name) || ''
+		: (['TEXTAREA', 'INPUT'].includes(element.tagName) && element.name) || config.name || ''
 	const nameGrade = name && name + 'Grade'
-	const maxGrade = element.hasAttribute(dataMaxGrade) ? Number(element.getAttribute(dataMaxGrade)) : undefined
+	const maxGrade = element.hasAttribute(dataMaxGrade)
+		? Number(element.getAttribute(dataMaxGrade))
+		: config.maxGrade
+		? Number(config.maxGrade)
+		: undefined
 	const requestedTargetGrade = element.hasAttribute(dataTargetGrade)
 		? Number(element.getAttribute(dataTargetGrade))
+		: config.targetGrade
+		? Number(config.targetGrade)
 		: undefined
 	/*
 "[NIH] recommend a readability grade level of less than 7th grade for patient directed information."
@@ -127,8 +144,12 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 */
 	const defaultTargetGrade = 7
 	const targetGrade = requestedTargetGrade || maxGrade || defaultTargetGrade
-	const highlightNodeType = element.hasAttribute(dataHighlightByParagraph) ? 'ParagraphNode' : 'SentenceNode'
-	const bNativeFormValidation = element.hasAttribute(dataNativeFormValidation)
+	const highlightNodeType =
+		element.hasAttribute(dataHighlightByParagraph) || config.highlightByParagraph ? 'ParagraphNode' : 'SentenceNode'
+	const bNativeFormValidation = element.hasAttribute(dataNativeFormValidation) || config.nativeFormValidation
+	const popover = element.hasAttribute(dataPopoverToggle)
+		? element.getAttribute(dataPopoverToggle)
+		: config.popoverToggle || 'popover'
 
 	// Grade/Hue range: Target is 1/3 from TooEasy to TooHard (in grade level and in hue)
 	const tooHardGrade = max(targetGrade + 4, maxGrade || targetGrade) // Default = 11
@@ -325,7 +346,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 						dataset: {
 							content: sResultsHTML,
 							html: 'true',
-							toggle: 'popover-app',
+							toggle: popover,
 							placement: 'auto'
 						},
 						attributes: {

@@ -21,12 +21,26 @@
     maximum allowed score.  If over Target+4, extends the
     grade level highlight range in both directions.
     Default = none
+*   data-name: used as the name for the textarea and the nameGrade
+    hidden input with the score.  Does not override an existing textarea name.
 *   data-native-form-validation: if attribute exists and text’s
     grade is greater than data-max-grade, blocks form submission.
 *   data-highlight-by-paragraph: if attribute exists, highlighted text
     feedback is per paragraph instead of per sentence.
-*   data-name: used as the name for the textarea and the nameGrade
-    hidden input with the score.  Does not override an existing textarea name.
+*   data-popover-toggle: Populates data-toggle value for popovers.
+
+## Global attributes:
+
+*   If a globalReadabilityConfig object exists before the readability.min.js
+    include, that config object's values will be used as default options.
+    Any attributes on any particular elements will still take precedence.
+*   targetGrade
+*   maxGrade
+*   name
+*   nativeFormValidation
+*   highlightByParagraph
+*   popoverToggle
+
 
 ## Related
 

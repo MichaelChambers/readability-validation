@@ -7,7 +7,7 @@ h2{margin: 2em 0 0 0;}
 <form action="MyPage.asp" method="post" id="MyForm" name="MyForm">
 	<h1>Readability - Validation</h1>
 	<h2>Readability: Definition, Wikipedia</h2><!-- Grade 11.69; highlighted by paragraph. Has WikipediaGrade hidden input with score. Has screen reader text while grade is over max / target. -->
-	<div data-highlight-by-paragraph="true" data-name="Wikipedia" data-target-grade="8" data-max-grade="11" data-readability=
+	<div data-highlight-by-paragraph="true" data-name="Wikipedia" data-target-grade="8" data-max-grade="11" data-popover-toggle='popover-other' data-readability=
 "	People have defined readability in various ways, e.g., in: The Literacy Dictionary, Jeanne Chall and Edgar Dale, G. Harry McLaughlin, William DuBay.
 	Easy reading helps learning and enjoyment, so what we write should be easy to understand.
 	While many writers and speakers since ancient times have used plain language, the 20th century brought more focus to reading ease. Much research has focused on matching prose to reading skills. This has used many successful formulas: in research, government, teaching, publishing, the military, medicine, and business. Many people in many languages have been helped by this.
@@ -43,7 +43,7 @@ to know how.</textarea>
 
 
 	<h2>Trump, Presidential Bid announcement</h2><!-- Grade 4.54; while the grade is under the target, line highlights do not automatically display -->
-	<textarea data-name="Trump" data-target-grade="7" data-readability>
+	<textarea data-name="Trump" data-readability>
 Thank you. It’s true, and these are the best and the finest. When Mexico sends its people, they’re not sending their best. They’re not sending you. They’re not sending you. They’re sending people that have lots of problems, and they’re bringing those problems with us. They’re bringing drugs. They’re bringing crime. They’re rapists. And some, I assume, are good people.
 But I speak to border guards and they tell us what we’re getting. And it only makes common sense. It only makes common sense. They’re sending us not the right people.</textarea>
 
@@ -109,12 +109,21 @@ But I speak to border guards and they tell us what we’re getting. And it only 
 	<input type="submit" value="Submit">
 </form>
 </main>
+<script>
+	var globalReadabilityConfig = {
+		targetGrade: '6',
+		popoverToggle: 'popover-app'
+	}
+</script>
 <script src="readability-validation.min.js"></script>
 <script src="jquery.min.js"></script>
 <script src="bootstrap.min.js"></script>
 <script>
 	$(function () {
 		$('[data-toggle="popover-app"]').popover()
+	})
+	$(function () {
+		$('[data-toggle="popover-other"]').popover()
 	})
 </script>
 <!-- restore textarea's form-control border -->
