@@ -65,11 +65,14 @@ const styleContent = `
 [data-readability] textarea {
 	position: absolute;
 	top: 0;
-	color: inherit;
+	color: black;
 }
 
 [data-readability] .footer {
 	margin-bottom: 1em;
+}
+[data-readability] .footer a span {
+	color: black;
 }
 [data-readability] .footer .ml {
 	margin-left: 1em;
