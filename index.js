@@ -78,6 +78,25 @@ const styleContent = `
 	margin-right: 0.2em;
 	vertical-align: -1px;
 }
+[data-readability] .gradient {
+	background-image:
+		linear-gradient(
+			to right,
+			hsl(180,93%,85%),
+			hsl(180,93%,85%),
+			hsl(120,93%,85%),
+			hsl(60,93%,85%),
+			hsl(0,93%,85%),
+			hsl(0,93%,85%)
+		);
+	padding: 5px 0;
+}
+[data-readability] .gradient span {
+	margin-right: 30px;
+}
+[data-readability] .gradient span:last-child {
+	margin-right: 0;
+}
 `
 
 function roundTo2Decimals(n) {
@@ -153,6 +172,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 
 	// Grade/Hue range: Target is 1/3 from TooEasy to TooHard (in grade level and in hue)
 	const tooHardGrade = max(targetGrade + 4, maxGrade || targetGrade) // Default = 11
+	const hardGrade = (tooHardGrade + targetGrade) / 2 // Default = 9
 	const tooEasyGrade = targetGrade - (tooHardGrade - targetGrade) / 2 // Default = 5
 	const tooEasyHue = 180 // Teal
 	// TargetHue = 120 = Green
@@ -333,6 +353,17 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 			'</dd>' +
 			'<dt>Gunning Fog</dt><dd>' +
 			(scores.gunningFog || 0) +
+			'</dd>' +
+			'<dt>Grade Level to Color mapping</dt><dd>' +
+			'<span class="gradient"><span>-</span><span>' +
+			tooEasyGrade +
+			'</span><span><b>' +
+			targetGrade +
+			'</b></span><span>' +
+			hardGrade +
+			'</span><span>' +
+			tooHardGrade +
+			'</span><span>+</span></span>' +
 			'</dd>' +
 			'</dl>'
 
