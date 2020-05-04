@@ -81,7 +81,7 @@ const styleContent = `
 	margin-right: 0.2em;
 	vertical-align: -1px;
 }
-[data-readability] .gradient {
+.readability-mapping {
 	background-image:
 		linear-gradient(
 			to right,
@@ -94,10 +94,10 @@ const styleContent = `
 		);
 	padding: 5px 0;
 }
-[data-readability] .gradient span {
+.readability-mapping span {
 	margin-right: 30px;
 }
-[data-readability] .gradient span:last-child {
+.readability-mapping span:last-child {
 	margin-right: 0;
 }
 `
@@ -358,7 +358,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 			(scores.gunningFog || 0) +
 			'</dd>' +
 			'<dt>Grade Level to Color mapping</dt><dd>' +
-			'<span class="gradient"><span>-</span><span>' +
+			'<span class="readability-mapping"><span>-</span><span>' +
 			tooEasyGrade +
 			'</span><span><b>' +
 			targetGrade +
