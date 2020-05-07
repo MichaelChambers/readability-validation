@@ -79,12 +79,12 @@
     "singleQuote": true,
     "bracketSpacing": true,
     "quoteProps": "as-needed",
-    "semi": false,
+    "semi": true,
     "trailingComma": "none"
   },
   "xo": {
     "prettier": true,
-    "esnext": false,
+    "esnext": true,
     "ignores": [
       "readability-validation.js"
     ],
