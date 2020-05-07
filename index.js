@@ -6,7 +6,7 @@ const patch = require('virtual-dom/patch')
 const h = require('virtual-dom/h')
 const debounce = require('debounce')
 const xtend = require('xtend')
-const mean = require('compute-mean')
+const average = require('average')
 const unlerp = require('unlerp')
 const lerp = require('lerp')
 const unified = require('unified')
@@ -267,7 +267,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 		const scores = results.scores
 		if (Boolean(scores) && scores.letterCount) {
 			results.grade = roundTo2Decimals(
-				mean([
+				average([
 					/*
 					Per Wikipedia: A 2010 study published in the Journal of the Royal College of Physicians of Edinburgh stated that
 						“SMOG should be the preferred measure of readability when evaluating consumer-oriented healthcare material.”

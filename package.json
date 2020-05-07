@@ -30,7 +30,7 @@
     "index.js"
   ],
   "dependencies": {
-    "compute-mean": "^3.0.0",
+    "average": "^0.1.0",
     "debounce": "^1.0.0",
     "global": "^4.0.0",
     "lerp": "^1.0.0",
