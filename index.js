@@ -134,21 +134,40 @@ const config = win.globalReadabilityConfig || {
 	popoverToggle: undefined
 };
 
-const aReadability = doc.querySelectorAll('[' + dataReadability + ']');
+const aReadability = [].slice.call(doc.querySelectorAll('[' + dataReadability + ']'));
+
+// IE 11 polyfills from MDN:
+if (win.Element.prototype.getAttributeNames === undefined) {
+	win.Element.prototype.getAttributeNames = function () {
+		const attributes = this.attributes;
+		const length = attributes.length;
+		const result = new Array(length);
+		for (let i = 0; i < length; i++) {
+			result[i] = attributes[i].name;
+		}
+
+		return result;
+	};
+}
+
+if (win.Number.EPSILON === undefined) {
+	Number.EPSILON = Math.pow(2, -52);
+}
+// End IE 11 polyfills from MDN
 
 if (aReadability.length > 0) {
 	const style = doc.createElement('style');
 	style.textContent = styleContent;
-	doc.head.append(style);
-	for (const element of aReadability) {
-		plugReadability(element);
+	doc.head.appendChild(style);
+	for (let i = 0; i < aReadability.length; ++i) {
+		plugReadability(aReadability[i]);
 	}
 }
 
 function plugReadability(element) {
 	const name = element.hasAttribute(dataName)
 		? element.getAttribute(dataName)
-		: (['TEXTAREA', 'INPUT'].includes(element.tagName) && element.name) || config.name || '';
+		: (['TEXTAREA', 'INPUT'].indexOf(element.tagName) > -1 && element.name) || config.name || '';
 	const nameGrade = name && name + 'Grade';
 	const maxGrade = element.hasAttribute(dataMaxGrade)
 		? Number(element.getAttribute(dataMaxGrade))
@@ -208,7 +227,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 		// Set the eleReadability [data-readability] root
 		if (bIsTextArea || bIsInput) {
 			eleReadability = doc.createElement('div');
-			element.before(eleReadability);
+			element.insertAdjacentElement('beforebegin', eleReadability);
 			text = element.value;
 			if (!text) {
 				text = element.getAttribute(dataReadability);
@@ -234,13 +253,16 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 
 			if (bIsInput) {
 				// Copy class and most attributes from Input to new Textarea, then delete the Input.
-				for (const attName of element.getAttributeNames()) {
-					if (!['name', 'type', 'value', 'size'].includes(attName)) {
+				let attName;
+				const attNames = element.getAttributeNames();
+				for (let i = 0; i < attNames.length; ++i) {
+					attName = attNames[i];
+					if (['name', 'type', 'value', 'size'].indexOf(attName) < 0) {
 						eleTextArea.setAttribute(attName, element.getAttribute(attName));
 					}
 				}
 
-				element.remove();
+				element.parentNode.removeChild(element);
 			}
 		}
 
@@ -248,7 +270,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 
 		eleReadability.innerHTML = '<div class="editor"><div class="draw"></div></div><div class="footer"></div>';
 		eleDraw = eleReadability.querySelector('.draw');
-		eleDraw.after(eleTextArea);
+		eleDraw.insertAdjacentElement('afterend', eleTextArea);
 		eleFooter = eleReadability.querySelector('.footer');
 
 		eleTextArea.value = text;

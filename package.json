@@ -34,7 +34,7 @@
     "debounce": "^1.0.0",
     "global": "^4.0.0",
     "lerp": "^1.0.0",
-    "readability-scores": "^1.0.4",
+    "readability-scores": "^1.0.6",
     "retext-english": "^3.0.0",
     "retext-stringify": "^2.0.4",
     "unified": "^9.0.0",
@@ -43,6 +43,9 @@
     "xtend": "^4.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
+    "babelify": "^10.0.0",
     "bootstrap": "~3.3.2",
     "browserify": "^16.0.0",
     "jquery": "^3.5.0",
@@ -56,8 +59,8 @@
   },
   "scripts": {
     "format": "remark . -qfo && prettier --write \"**/*.js\" && xo --fix",
-    "build-bundle": "browserify . -s readabilityValidation -o readability-validation.js",
-    "build-mangle": "browserify . -s readabilityValidation -p tinyify -o readability-validation.min.js",
+    "build-bundle": "browserify -t [ babelify --global --presets [ @babel/preset-env ] ] . -s readabilityValidation -o readability-validation.js",
+    "build-mangle": "browserify -t [ babelify --global --presets [ @babel/preset-env ] ] . -s readabilityValidation -p tinyify -o readability-validation.min.js",
     "build": "npm run build-bundle && npm run build-mangle",
     "test-api": "node test",
     "test-coverage": "nyc --reporter lcov tape test.js",
@@ -89,7 +92,12 @@
       "readability-validation.js"
     ],
     "rules": {
-      "unicorn/prefer-node-append": "off"
+      "unicorn/prefer-node-append": "off",
+	  "unicorn/prefer-modern-dom-apis": "off",
+	  "unicorn/prefer-node-remove": "off",
+      "unicorn/no-for-loop": "off",
+	  "unicorn/prefer-includes": "off",
+	  "prefer-exponentiation-operator": "off"
     }
   },
   "remarkConfig": {
