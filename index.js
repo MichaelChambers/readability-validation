@@ -413,7 +413,8 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 							role: 'status',
 							'aria-label': 'Detailed Results',
 							title: 'Detailed Results',
-							href: '#'
+							href: '#',
+							onclick: 'return false'
 						}
 					},
 					[
