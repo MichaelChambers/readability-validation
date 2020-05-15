@@ -406,7 +406,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 							html: 'true',
 							toggle: popover,
 							placement: 'auto',
-							trigger: 'click hover focus'
+							trigger: 'hover focus'
 						},
 						attributes: {
 							rel: 'popover',
