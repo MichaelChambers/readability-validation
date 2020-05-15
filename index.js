@@ -512,7 +512,9 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 			return;
 		}
 
-		return ceil(node.getBoundingClientRect().height / parseInt(win.getComputedStyle(node).lineHeight, 10)) + 1;
+		return (
+			ceil(node.getBoundingClientRect().height / Number.parseInt(win.getComputedStyle(node).lineHeight, 10)) + 1
+		);
 	}
 
 	function resize() {
