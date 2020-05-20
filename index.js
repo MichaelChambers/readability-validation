@@ -106,14 +106,6 @@ function roundTo2Decimals(n) {
 	return round((n + Number.EPSILON) * 100) / 100;
 }
 
-function highlight(hue) {
-	return {
-		style: {
-			backgroundColor: 'hsl(' + [hue, '93%', '85%'].join(', ') + ')'
-		}
-	};
-}
-
 const processor = unified().use(english).use(stringify);
 
 const dataReadability = 'data-readability'; // Value used as initial text unless element is textarea and has textContent
@@ -131,7 +123,8 @@ const config = win.globalReadabilityConfig || {
 	targetGrade: undefined,
 	highlightByParagraph: undefined,
 	nativeFormValidation: undefined,
-	popoverToggle: undefined
+	popoverToggle: undefined,
+	clearYellowRed: undefined
 };
 
 const aReadability = [].slice.call(doc.querySelectorAll('[' + dataReadability + ']'));
@@ -195,12 +188,12 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 		: config.popoverToggle || 'popover';
 
 	// Grade/Hue range: Target is 1/3 from TooEasy to TooHard (in grade level and in hue)
-	const tooHardGrade = max(targetGrade + 4, maxGrade || targetGrade); // Default = 11
+	const tooHardGrade = config.clearYellowRed && maxGrade ? maxGrade : max(targetGrade + 4, maxGrade || targetGrade); // Default = 11
 	const hardGrade = (tooHardGrade + targetGrade) / 2; // Default = 9
 	const tooEasyGrade = targetGrade - (tooHardGrade - targetGrade) / 2; // Default = 5
-	const tooEasyHue = 180; // Teal
-	// TargetHue = 120 = Green
-	// HardHue = 60 = Yellow
+	const tooEasyHue = 180; // Cyan
+	const targetHue = 120; // Green
+	const hardHue = 60; // Yellow
 	const tooHardHue = 0; // Red
 
 	let text;
@@ -313,6 +306,24 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 		}
 
 		return results;
+	}
+
+	function highlight(hue) {
+		if (config.clearYellowRed) {
+			if (hue >= targetHue) {
+				return '';
+			}
+
+			if (hue > tooHardHue) {
+				hue = hardHue;
+			}
+		}
+
+		return {
+			style: {
+				backgroundColor: 'hsl(' + [hue, '93%', '85%'].join(', ') + ')'
+			}
+		};
 	}
 
 	function onChangeValue(/* ev */) {
