@@ -82,6 +82,18 @@ const styleContent = `
 	vertical-align: -1px;
 }
 .readability-mapping {
+	padding: 5px 0;
+}
+.readability-mapping span {
+	padding-left: 30px;
+}
+.readability-mapping div span {
+	padding-left: 20px;
+}
+.readability-mapping span:first-child {
+	padding-left: 0;
+}
+.readability-mapping-gradient {
 	background-image:
 		linear-gradient(
 			to right,
@@ -92,13 +104,17 @@ const styleContent = `
 			hsl(0,93%,85%),
 			hsl(0,93%,85%)
 		);
-	padding: 5px 0;
 }
-.readability-mapping span {
-	margin-right: 30px;
+.readability-mapping div {
+	border: 1px solid #ccc;
+	padding: 0 2px;
+	display: inline-block;
 }
-.readability-mapping span:last-child {
-	margin-right: 0;
+.readability-mapping span.overTarget {
+	background-color: hsl(60,93%,85%);
+}
+.readability-mapping span.overMax {
+	background-color: hsl(0,93%,85%);
 }
 `;
 
@@ -191,6 +207,7 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 	const tooHardGrade = config.clearYellowRed && maxGrade ? maxGrade : max(targetGrade + 4, maxGrade || targetGrade); // Default = 11
 	const hardGrade = (tooHardGrade + targetGrade) / 2; // Default = 9
 	const tooEasyGrade = targetGrade - (tooHardGrade - targetGrade) / 2; // Default = 5
+	const overMaxGrade = 2 * tooHardGrade - hardGrade;
 	const tooEasyHue = 180; // Cyan
 	const targetHue = 120; // Green
 	const hardHue = 60; // Yellow
@@ -393,15 +410,27 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5504936/
 			(scores.gunningFog || 0) +
 			'</dd>' +
 			'<dt>Grade Level to Color mapping</dt><dd>' +
-			'<span class="readability-mapping"><span>-</span><span>' +
-			tooEasyGrade +
-			'</span><span><b>' +
-			targetGrade +
-			'</b></span><span>' +
-			hardGrade +
-			'</span><span>' +
-			tooHardGrade +
-			'</span><span>+</span></span>' +
+			(config.clearYellowRed
+				? '<span class="readability-mapping"><div><span>-</span><span>' +
+				  tooEasyGrade +
+				  '</span><span><b>' +
+				  targetGrade +
+				  '</b></span><span class="overTarget">' +
+				  hardGrade +
+				  '</span><span class="overTarget">' +
+				  tooHardGrade +
+				  '</span><span class="overMax">' +
+				  overMaxGrade +
+				  '</span><span class="overMax">+</span></div></span>'
+				: '<span class="readability-mapping readability-mapping-gradient"><span>-</span><span>' +
+				  tooEasyGrade +
+				  '</span><span><b>' +
+				  targetGrade +
+				  '</b></span><span>' +
+				  hardGrade +
+				  '</span><span>' +
+				  tooHardGrade +
+				  '</span><span>+</span></span>') +
 			'</dd>' +
 			'</dl>';
 
